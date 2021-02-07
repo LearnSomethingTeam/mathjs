@@ -275,9 +275,22 @@ export const createRationalize = /* #__PURE__ */ factory(name, dependencies, ({
         throw new Error('There is an unsolved function call')
       } else if (tp === 'OperatorNode') {
         if (node.op === '^') {
-          // TODO: handle negative exponents like in '1/x^(-2)'
-          if (node.args[1].type !== 'ConstantNode' || !isInteger(parseFloat(node.args[1].value))) {
-            throw new Error('There is a non-integer exponent')
+          if (node.args[1].type === 'OperatorNode' && node.args[1].fn === 'unaryMinus') {
+            if (node.args[1].args[0].type === 'ConstantNode') {
+              var negatedExp = parseFloat(node.args[1].args[0].value);
+              if (negatedExp > 0) {
+                throw new Error('There is a negative exponent');
+              }
+              
+              if (!(0, _number.isInteger)(negatedExp)) {
+                throw new Error('There is a non-integer exponent');
+              }
+            } else {
+              // Assumes the unaryMinus has only one argument
+              recPoly(node.args[1].args[0]);//A negated polynomial is still a polynomial, so we can recurse here
+            }
+          } else if (node.args[1].type !== 'ConstantNode' || !(0, _number.isInteger)(parseFloat(node.args[1].value))) {
+            throw new Error('There is a non-integer exponent');
           } else {
             recPoly(node.args[0])
           }
