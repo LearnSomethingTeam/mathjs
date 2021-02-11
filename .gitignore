@@ -9,6 +9,4 @@ _site
 node_modules
 .nyc_output
 /coverage
-
-lib
 *.generated.js
